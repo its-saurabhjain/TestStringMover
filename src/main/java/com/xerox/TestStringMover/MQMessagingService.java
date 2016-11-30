@@ -154,7 +154,7 @@ public class MQMessagingService implements IMessagingService {
 		}
 		open(MQC.MQOO_INQUIRE | MQC.MQOO_BROWSE);
 		try {
-			String msgText= "";	
+			String msgText= null;	
 			MQMessage buf = new MQMessage();
 				MQGetMessageOptions gmo = new MQGetMessageOptions();
 				gmo.options=MQC.MQGMO_WAIT | MQC.MQGMO_BROWSE_FIRST;
@@ -172,11 +172,11 @@ public class MQMessagingService implements IMessagingService {
 			        //gmo.options = MQC.MQGMO_WAIT | MQC.MQGMO_MSG_UNDER_CURSOR;
 			        queue.get(buf, gmo);
 			        counter ++;
+			        if( log.isInfoEnabled() ) {
+						log.info("Message: " + buf.putApplicationName + "|" + buf.putDateTime.getTime() + "|" + buf.readLine());
+					}
 				}
 				messages = queue.getCurrentDepth();
-			if( log.isInfoEnabled() ) {
-				log.info("Message: " + buf.putApplicationName + "|" + buf.putDateTime.getTime() + "|" + buf.readLine());
-			}
 			return msgText;
 		} catch (MQException e) {
 			if( e.reasonCode == MQException.MQRC_NO_MSG_AVAILABLE ) {

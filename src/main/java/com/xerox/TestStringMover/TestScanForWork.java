@@ -87,18 +87,26 @@ public class TestScanForWork extends TimerTask {
 				String msgCor = pingMessage.substring(0, 25);
 				String hasFile = fileList.get(msgCor);
 				//send Ping MQ message if it has not been sent
+				messageSent = sendMessage(pingMessage.substring(0, 25)+ "RC=00");
+				//Send Response messages to the download queue
+				/*
 				if(hasFile == null)
 				{
-					messageSent = sendMessage(pingMessage);
+					//messageSent = sendMessage(pingMessage);
 					fileList.put(msgCor, pingMessage);
 				}
 				String fileMessage = fileParser.parseFile2(file.getAbsolutePath());
 				messageSent = sendMessage(fileMessage);
 				fileParser.moveFile(file, newloc, invalid);
+				*/
+				
 			}
-			//Send Response messages to the download queue
-			//messageSent = sendMessage(pingMessage.substring(0, 25)+ "RC=00");
+			
 			String message= receiveMessage();
+			if( log.isDebugEnabled() ) {
+				log.debug(message);
+			}
+			
 		} //Try block ends here
 		catch(Exception exp)
 		{
@@ -111,8 +119,8 @@ public class TestScanForWork extends TimerTask {
 	private boolean sendMessage(String mqMessage) {
 		boolean success = true;
 		try {
-				mqms.setQueueName(Configurator.getInstance().getMQ_UPLOAD_QUEUE());
-				//mqms.setQueueName(Configurator.getInstance().getMQ_DOWNLOAD_QUEUE());
+				//mqms.setQueueName(Configurator.getInstance().getMQ_UPLOAD_QUEUE());
+				mqms.setQueueName(Configurator.getInstance().getMQ_DOWNLOAD_QUEUE());
 				mqms.send(mqMessage);
 			
 		} catch (Exception e) {
@@ -129,11 +137,9 @@ public class TestScanForWork extends TimerTask {
 		String sendFile = "";
 		boolean isMessageReceived = false;
 		try{
-			mqms.setQueueName(Configurator.getInstance().getMQ_UPLOAD_QUEUE());
-			//mqms.setQueueName(Configurator.getInstance().getMQ_DOWNLOAD_QUEUE());	
+			//mqms.setQueueName(Configurator.getInstance().getMQ_UPLOAD_QUEUE());
+			mqms.setQueueName(Configurator.getInstance().getMQ_DOWNLOAD_QUEUE());	
 			messageReceived = mqms.receive();
-			if(messageReceived == null || messageReceived == "")
-				messageReceived = "0112016/05/23091215501130RC=00";
 		}catch (Exception e){
 			if( log.isErrorEnabled() ) {
 				log.error("Failed to receive MQ message", e);

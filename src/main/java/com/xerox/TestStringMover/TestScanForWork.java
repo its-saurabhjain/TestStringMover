@@ -87,7 +87,7 @@ public class TestScanForWork extends TimerTask {
 				String msgCor = pingMessage.substring(0, 25);
 				String hasFile = fileList.get(msgCor);
 				//send Ping MQ message if it has not been sent
-				messageSent = sendMessage(pingMessage.substring(0, 25)+ "RC=00");
+				//messageSent = sendMessage(pingMessage.substring(0, 25)+ "RC=00");
 				//Send Response messages to the download queue
 				/*
 				if(hasFile == null)
@@ -101,7 +101,6 @@ public class TestScanForWork extends TimerTask {
 				*/
 				
 			}
-			
 			String message= receiveMessage();
 			if( log.isDebugEnabled() ) {
 				log.debug(message);
@@ -137,8 +136,8 @@ public class TestScanForWork extends TimerTask {
 		String sendFile = "";
 		boolean isMessageReceived = false;
 		try{
-			//mqms.setQueueName(Configurator.getInstance().getMQ_UPLOAD_QUEUE());
-			mqms.setQueueName(Configurator.getInstance().getMQ_DOWNLOAD_QUEUE());	
+			mqms.setQueueName(Configurator.getInstance().getMQ_UPLOAD_QUEUE());
+			//mqms.setQueueName(Configurator.getInstance().getMQ_DOWNLOAD_QUEUE());	
 			messageReceived = mqms.receive();
 		}catch (Exception e){
 			if( log.isErrorEnabled() ) {

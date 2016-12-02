@@ -63,7 +63,8 @@ public class MQMessagingService implements IMessagingService {
 			MQEnvironment.properties.put(MQC.TRANSPORT_PROPERTY,MQC.TRANSPORT_MQSERIES);
 			qmgr = new MQQueueManager(queueMgrName);
 			////Working opneOption for sending messages
-			int openOptions = MQC.MQOO_INQUIRE | MQC.MQOO_INPUT_EXCLUSIVE | MQC.MQOO_BROWSE;
+			//int openOptions = MQC.MQOO_INQUIRE | MQC.MQOO_INPUT_SHARED | MQC.MQOO_BROWSE | MQC.MQGMO_CONVERT;
+			int openOptions = MQC.MQOO_INQUIRE | MQC.MQOO_INPUT_SHARED | MQC.MQOO_BROWSE;
 			//int openOptions = MQC.MQOO_INQUIRE | MQC.MQOO_FAIL_IF_QUIESCING  | MQC.MQOO_INPUT_SHARED | MQC.MQOO_BROWSE;
 			if( mode == (MQC.MQOO_INPUT_AS_Q_DEF|MQC.MQOO_INQUIRE|MQC.MQOO_OUTPUT))
 			{
@@ -125,9 +126,7 @@ public class MQMessagingService implements IMessagingService {
 
 				MQPutMessageOptions pmo = new MQPutMessageOptions();
 				pmo.options += MQC.MQPMO_FAIL_IF_QUIESCING ;
-				int len = queue.getCurrentDepth();
 				queue.put(buf, pmo);
-				len = queue.getCurrentDepth();
 				if( log.isInfoEnabled() ) {
 					log.info("Sent message: " + msg);
 				}
@@ -154,27 +153,41 @@ public class MQMessagingService implements IMessagingService {
 		}
 		open(MQC.MQOO_INQUIRE | MQC.MQOO_BROWSE);
 		try {
-			String msgText= null;	
-			MQMessage buf = new MQMessage();
+				String msgText= null;	
+				StringBuilder sb = new StringBuilder();
+				MQMessage buf = new MQMessage();
+				//buf.format = MQC.MQFMT_STRING;
 				MQGetMessageOptions gmo = new MQGetMessageOptions();
 				gmo.options=MQC.MQGMO_WAIT | MQC.MQGMO_BROWSE_FIRST;
 				gmo.matchOptions=MQC.MQMO_NONE;
 				gmo.waitInterval=5000;
+				
 				int counter = 1;
 				int messages = queue.getCurrentDepth();
 				while(counter <= messages)
 				{
 					gmo.options = MQC.MQGMO_WAIT | MQC.MQGMO_BROWSE_NEXT;
 					queue.get(buf, gmo);
-					msgText = buf.readString(buf.getMessageLength());
-			        System.out.println("msg text: "+ msgText);
+					//msgText = buf.readString(buf.getMessageLength());
+					byte[] b = new byte[buf.getMessageLength()];
+					int msglen = b.length > 32 ? 30 : b.length;
+					buf.readFully(b, 0, msglen);
+					msgText = new String(b);
+					sb.append(msgText.trim());
+					sb.append("_");
 			        gmo.options = MQC.MQGMO_WAIT | MQC.MQGMO_BROWSE_MSG_UNDER_CURSOR;
 			        //gmo.options = MQC.MQGMO_WAIT | MQC.MQGMO_MSG_UNDER_CURSOR;
 			        queue.get(buf, gmo);
 			        counter ++;
 			        if( log.isInfoEnabled() ) {
-						log.info("Message: " + buf.putApplicationName + "|" + buf.putDateTime.getTime() + "|" + buf.readLine());
+						log.info("Message: " + buf.putApplicationName + "|" + buf.putDateTime.getTime() + "|" + msgText);
 					}
+			        buf.clearMessage();
+				}
+				if(sb.length() > 0)
+				{
+					sb.delete(sb.length()-1, sb.length());
+					msgText = sb.toString();
 				}
 				messages = queue.getCurrentDepth();
 			return msgText;
@@ -183,7 +196,6 @@ public class MQMessagingService implements IMessagingService {
 				if( log.isInfoEnabled() ) {
 					log.info("No messages in queue");
 				}
-				int messages = queue.getCurrentDepth();
 				
 			} else {
 				throw new Exception("MQException: Completion code=" + e.completionCode + " Reason code=" + e.reasonCode, e);

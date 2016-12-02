@@ -8,10 +8,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.StringTokenizer;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -72,8 +71,9 @@ public class FileParser {
 			   messageText = builder.toString();
 			   */
 			   Charset charset = Charset.forName("UTF-8");
-			   byte[] encoded = Files.readAllBytes(Paths.get(fileLoc));
-			   return charset.decode(ByteBuffer.wrap(encoded)).toString();
+			   //byte[] encoded = Files.readAllBytes(Paths.get(fileLoc));
+			   //return charset.decode(ByteBuffer.wrap(encoded)).toString();
+			   return FileUtils.readFileToString(new File(fileLoc), "UTF-8");
 			   
 			   }catch (Exception e){
 			     System.err.println("Error: " + e.getMessage());
